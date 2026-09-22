@@ -7,11 +7,11 @@
 
 import sqlite3
 from pathlib import Path
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static", static_url_path="")
 CORS(app)
 
 DATABASE = Path("data/server.db")
@@ -49,6 +49,18 @@ def create_request():
     command = body["command"]
 
     db = get_db()
+
+    existing = db.execute(
+        "SELECT id FROM requests WHERE id = ?",
+        (server_id,)
+    ).fetchone()
+
+    if existing is not None:
+        db.close()
+        return jsonify({
+            "error": "指定されたIDは既に存在します"
+        }), 409
+
     db.execute(
         """
         INSERT INTO requests (id, status, purpose, command)
@@ -103,9 +115,101 @@ def get_requests():
     return jsonify([dict(row) for row in rows])
 
 
+@app.route("/api/requests/<server_id>", methods=["PUT"])
+def update_request(server_id):
+    body = request.get_json()
+
+    db = get_db()
+
+    existing = db.execute(
+        "SELECT id FROM requests WHERE id = ?",
+        (server_id,)
+    ).fetchone()
+
+    if existing is None:
+        db.close()
+        return jsonify({
+            "error": "指定されたIDは存在しません"
+        }), 404
+
+    fields = []
+    values = []
+
+    if "purpose" in body:
+        fields.append("purpose = ?")
+        values.append(body["purpose"])
+
+    if "command" in body:
+        fields.append("command = ?")
+        values.append(body["command"])
+
+    if "status" in body:
+        if body["status"] not in ("承認待ち", "承認済み"):
+            db.close()
+            return jsonify({
+                "error": "statusは承認待ちまたは承認済みである必要があります"
+            }), 400
+        fields.append("status = ?")
+        values.append(body["status"])
+
+    if fields:
+        fields.append("updated_at = CURRENT_TIMESTAMP")
+        values.append(server_id)
+        db.execute(
+            f"UPDATE requests SET {', '.join(fields)} WHERE id = ?",
+            values
+        )
+        db.commit()
+
+    row = db.execute(
+        """
+        SELECT id, status, purpose, command, created_at, updated_at
+        FROM requests
+        WHERE id = ?
+        """,
+        (server_id,)
+    ).fetchone()
+    db.close()
+
+    return jsonify(dict(row))
+
+
+@app.route("/api/requests/<server_id>", methods=["DELETE"])
+def delete_request(server_id):
+    db = get_db()
+
+    existing = db.execute(
+        "SELECT id FROM requests WHERE id = ?",
+        (server_id,)
+    ).fetchone()
+
+    if existing is None:
+        db.close()
+        return jsonify({
+            "error": "指定されたIDは存在しません"
+        }), 404
+
+    db.execute("DELETE FROM requests WHERE id = ?", (server_id,))
+    db.commit()
+    db.close()
+
+    return jsonify({"id": server_id, "deleted": True})
+
+
 @app.route("/api/requests/<server_id>/approve", methods=["POST"])
 def approve_request(server_id):
     db = get_db()
+
+    existing = db.execute(
+        "SELECT id FROM requests WHERE id = ?",
+        (server_id,)
+    ).fetchone()
+
+    if existing is None:
+        db.close()
+        return jsonify({
+            "error": "指定されたIDは存在しません"
+        }), 404
 
     db.execute(
         """
@@ -129,20 +233,12 @@ def approve_request(server_id):
 
     db.close()
 
-    if row is None:
-        return jsonify({
-            "error": "指定されたIDは存在しません"
-        }), 404
-
     return jsonify(dict(row))
 
 
 @app.route("/", methods=["GET"])
 def index():
-    return jsonify({
-        "name": "Server Approval API",
-        "status": "running"
-    })
+    return send_from_directory(app.static_folder, "index.html")
 
 
 if __name__ == "__main__":
