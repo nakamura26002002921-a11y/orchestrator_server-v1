@@ -95,6 +95,3 @@ cloudflared tunnel --url http://127.0.0.1:5000
 
  FlaskとCloudflare Tunnelをそれぞれ起動しているターミナルで `Ctrl + C` を押すと停止できます。
 
-```
-
-```
