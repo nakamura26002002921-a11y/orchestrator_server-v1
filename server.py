@@ -7,7 +7,7 @@
 
 import sqlite3
 from pathlib import Path
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 
@@ -238,7 +238,7 @@ def approve_request(server_id):
 
 @app.route("/", methods=["GET"])
 def index():
-    return send_from_directory(app.static_folder, "index.html")
+    return jsonify({"name": "orchestrator_server", "status": "ok"})
 
 
 if __name__ == "__main__":
