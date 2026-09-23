@@ -3,7 +3,7 @@
 # orchestrator_server にリクエストを登録するCLI
 #
 # Usage:
-#   python server_cli.py --id XXX --cmd "echo helloworld" --purpose "テスト" --approval-state False
+#   python server_cli.py --id XXX --cmd "echo helloworld" --purpose "テスト" --approval-state False --url https://xxxx.trycloudflare.com
 #
 # ※ サーバ(server.py)を先に起動しておくこと
 #   python3 server.py
