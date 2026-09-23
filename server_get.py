@@ -3,7 +3,7 @@
 # orchestrator_server から指定IDのリクエストを取得するCLI
 #
 # Usage:
-#   python server_get.py --id XXX
+#   python server_get.py --id XXX --url https://xxxx.trycloudflare.com
 #
 # 出力例:
 #   {
@@ -20,13 +20,10 @@
 
 import argparse
 import json
-
 import requests
 
-DEFAULT_BASE_URL = "http://127.0.0.1:5000"
 
-
-def get_request(server_id: str, base_url: str = DEFAULT_BASE_URL) -> dict:
+def get_request(server_id: str, base_url: str) -> dict:
     url = f"{base_url}/api/requests/{server_id}"
     response = requests.get(url)
     if response.status_code != 200:
@@ -50,13 +47,13 @@ def parse_args():
     )
     parser.add_argument("--id", required=True, help="取得するリクエストのID")
     parser.add_argument(
-        "--base-url",
-        default=DEFAULT_BASE_URL,
-        help=f"サーバのベースURL (デフォルト: {DEFAULT_BASE_URL})",
+        "--url",
+        required=True,
+        help="サーバのベースURL (必須。例: https://xxxx.trycloudflare.com)",
     )
     return parser.parse_args()
 
 if __name__ == "__main__":
     args = parse_args()
-    result = get_request(server_id=args.id, base_url=args.base_url)
+    result = get_request(server_id=args.id, base_url=args.url)
     print(json.dumps(result, ensure_ascii=False, indent=2))
