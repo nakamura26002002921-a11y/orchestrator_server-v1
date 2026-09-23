@@ -9,7 +9,8 @@
 #   {
 #     "XXX": {
 #       "実行コマンド": "echo helloworld",
-#       "目的": "テスト"
+#       "目的": "テスト",
+#       "承認": false
 #     }
 #   }
 #
@@ -39,9 +40,9 @@ def get_request(server_id: str, base_url: str = DEFAULT_BASE_URL) -> dict:
         server_id: {
             "実行コマンド": data.get("command"),
             "目的": data.get("purpose"),
+            "承認": data.get("status") == "承認済み",
         }
     }
-
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -54,7 +55,6 @@ def parse_args():
         help=f"サーバのベースURL (デフォルト: {DEFAULT_BASE_URL})",
     )
     return parser.parse_args()
-
 
 if __name__ == "__main__":
     args = parse_args()
