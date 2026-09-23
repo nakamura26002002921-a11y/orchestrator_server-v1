@@ -96,10 +96,13 @@ Cloudflare Tunnelに表示された `https://xxxxx.trycloudflare.com` をPWAのA
 サーバー起動後、別のターミナルから以下のCLIでリクエストの登録・取得ができます。
 （仮想環境を有効化した状態で実行してください）
 
+どちらのCLIも `--url` でサーバのベースURLを指定します。**`--url` は必須オプションです。省略するとエラーになります。**
+ローカルで動かしている場合は `--url http://127.0.0.1:5000` を、Cloudflare Tunnel経由の場合は手順6で表示された `https://xxxxx.trycloudflare.com` を指定してください。
+
 ### 9-1. リクエストを登録する (`server_cli.py`)
 
 ```
-python server_cli.py --id XXX --cmd "echo helloworld" --purpose "テスト" --approval-state False
+python server_cli.py --id XXX --cmd "echo helloworld" --purpose "テスト" --approval-state False --url "https://xxxxx.trycloudflare.com"
 ```
 
 | オプション | 内容 |
@@ -108,7 +111,7 @@ python server_cli.py --id XXX --cmd "echo helloworld" --purpose "テスト" --ap
 | `--cmd` | 実行コマンド（必須） |
 | `--purpose` | 目的（必須） |
 | `--approval-state` | `True` を指定すると登録と同時に承認済みにする（デフォルト: `False`） |
-| `--base-url` | サーバのベースURL（デフォルト: `http://127.0.0.1:5000`） |
+| `--url` | サーバのベースURL（**必須**。例: `https://xxxxx.trycloudflare.com` または `http://127.0.0.1:5000`） |
 
 実行すると以下のようなJSONが表示されます。
 
@@ -121,11 +124,22 @@ python server_cli.py --id XXX --cmd "echo helloworld" --purpose "テスト" --ap
 }
 ```
 
+`--url` を指定しなかった場合は、以下のようにエラーになり実行されません。
+
+```
+server_cli.py: error: the following arguments are required: --url
+```
+
 ### 9-2. リクエストを取得する (`server_get.py`)
 
 ```
-python server_get.py --id XXX
+python server_get.py --id XXX --url "https://xxxxx.trycloudflare.com"
 ```
+
+| オプション | 内容 |
+| --- | --- |
+| `--id` | 取得するリクエストのID（必須） |
+| `--url` | サーバのベースURL（**必須**。例: `https://xxxxx.trycloudflare.com` または `http://127.0.0.1:5000`） |
 
 実行すると以下のようなJSONが表示されます。
 
@@ -140,6 +154,12 @@ python server_get.py --id XXX
 ```
 
 `"承認"` はサーバー上の `status` を変換したものです。`"承認待ち"` の場合は `false`、`"承認済み"` の場合は `true` になります。
+
+`--url` を指定しなかった場合は、以下のようにエラーになり実行されません。
+
+```
+server_get.py: error: the following arguments are required: --url
+```
 
 ## 10. 停止
 
