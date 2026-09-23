@@ -12,11 +12,7 @@
 import argparse
 import json
 import sys
-
 import requests
-
-DEFAULT_BASE_URL = "http://127.0.0.1:5000"
-
 
 def str2bool(value: str) -> bool:
     if isinstance(value, bool):
@@ -33,7 +29,7 @@ def create_request(
     cmd: str,
     purpose: str,
     approval_state: bool,
-    base_url: str = DEFAULT_BASE_URL,
+    base_url: str,
 ) -> dict:
     url = f"{base_url}/api/requests"
     payload = {
@@ -78,9 +74,9 @@ def parse_args():
         help="True の場合は登録と同時に承認済みにする (デフォルト: False)",
     )
     parser.add_argument(
-        "--base-url",
-        default=DEFAULT_BASE_URL,
-        help=f"サーバのベースURL (デフォルト: {DEFAULT_BASE_URL})",
+        "--url",
+        required=True,
+        help="サーバのベースURL (必須。例: https://xxxx.trycloudflare.com)",
     )
     return parser.parse_args()
 
@@ -92,6 +88,6 @@ if __name__ == "__main__":
         cmd=args.cmd,
         purpose=args.purpose,
         approval_state=args.approval_state,
-        base_url=args.base_url,
+        base_url=args.url,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
